@@ -1,17 +1,22 @@
 #include <serLCD.h>
+#include "radio.h"
 
-int val = 0;
+const int throttleMin = 112;
+const int throttleMax = 840;
+
+int throttle = 0;
+int newThrot = 0;
 
 serLCD lcd;
 
 void setup()
 {
   Serial.begin(9600);
-  //lcd.setType(3);
-  lcd.leftToRight();
-  lcd.clear();
+  //rfBegin(19);
+  //lcd.leftToRight();
 }
 
+// pins:
 // 0: yaw
 // 1: throttle
 // 2: roll
@@ -19,9 +24,16 @@ void setup()
 
 void loop()
 {
-  val = analogRead(0);    // read the input pin
-  Serial.println(val); // yaw
-  lcd.print('a');
-  lcd.print('b');
+  throttle = analogRead(1);
+  // FIXME range conversion to 0-1500. Calculation is correct, but Ardino not doing it properly
+  newThrot = (((throttle - throttleMin) * 1500) / (throttleMax-throttleMin));
+  Serial.print("Raw throttle: ");
+  Serial.print(throttle);
+  Serial.print("\tscaled throttle: ");
+  Serial.println(newThrot);
+  //rfWrite(throttle); // issue: this only writes a byte (up to 255)
+  /*lcd.clear();
+  lcd.home();
+  lcd.print("ab");*/
 }
 

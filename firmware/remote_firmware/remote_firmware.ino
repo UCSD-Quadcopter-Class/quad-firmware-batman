@@ -1,4 +1,5 @@
 #include <serLCD.h>
+
 #include "radio.h"
 
 const int throttleMin = 112;
@@ -12,8 +13,8 @@ serLCD lcd;
 void setup()
 {
   Serial.begin(9600);
-  //rfBegin(19);
-  //lcd.leftToRight();
+  rfBegin(19);
+  lcd.leftToRight();
 }
 
 // pins:
@@ -32,8 +33,8 @@ void loop()
   Serial.print("\tscaled throttle: ");
   Serial.println(newThrot);
   //rfWrite(throttle); // issue: this only writes a byte (up to 255)
-  /*lcd.clear();
+  lcd.clear();
   lcd.home();
-  lcd.print("ab");*/
+  lcd.print("frog");
 }
 

@@ -1,7 +1,7 @@
 #include "radio.h"
 
 int motorPin = 8; // B5
-int throttle = 0;
+int throttle = 127;
 
 void setup()
 {
@@ -22,8 +22,8 @@ void loop()
       Serial.print("Not in range: ");
       Serial.println(tmp);
       throttle = 0;
-    }*/
-  }
+    }
+  }*/
   //Serial.print("Throttle: ");
   //Serial.println(throttle);
   analogWrite(motorPin, throttle);

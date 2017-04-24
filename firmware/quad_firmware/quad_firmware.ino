@@ -12,18 +12,19 @@ void setup()
 
 void loop()
 {
-  /*if (rfAvailable())
+  if (rfAvailable())
   {
-    Serial.println(rfRead()); // issue: reads a byte...
-    int tmp = rfRead();
-    if(tmp >= 0 && tmp <= 1023) { // make sure received value is in range
+    unsigned char tmp = rfRead();
+    Serial.println(int (tmp)); // issue: reads a byte...
+    if(tmp >= 0 && tmp <= 255) { // make sure received value is in range
       throttle = tmp;
     } else {
       Serial.print("Not in range: ");
       Serial.println(tmp);
       throttle = 0;
     }
-  }*/
+  }
+
   //Serial.print("Throttle: ");
   //Serial.println(throttle);
   analogWrite(motorPin, throttle);

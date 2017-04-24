@@ -22,8 +22,8 @@ serLCD lcd;
 void setup()
 {
   Serial.begin(9600);
-  //rfBegin(19);
-  //lcd.leftToRight();
+  rfBegin(19);
+  lcd.leftToRight();
 }
 
 long convertRange(long value, long oldMin, long oldMax, long newMin, long newMax)
@@ -74,6 +74,13 @@ void loop()
   serialPrint();
   //lcdPrint();
   rfThrot = convertRange(thr, thrMin, thrMax, 0, 255);
+  rfYaw = convertRange(yaw, yawMin, yawMax, 0, 255);
+  rfPitch = convertRange(pitch, pitchMin, pitchMax, 0, 255);
+  rfRoll = convertRange(roll, rollMin, rollMax, 0, 255);
   rfWrite(lowByte(rfThrot)); // TODO guard against out of range (0-255)
+  rfWrite(lowByte(rfYaw)); // TODO guard against out of range (0-255)
+  rfWrite(lowByte(rfPitch)); // TODO guard against out of range (0-255)
+  rfWrite(lowByte(rfRoll)); // TODO guard against out of range (0-255)
+
 }
 

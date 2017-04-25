@@ -15,7 +15,12 @@ long yaw = 0;
 long pitch = 0;
 long roll = 0;
 long rfThrot = 0;
+long rfYaw = 0;
+long rfPitch = 0;
+long rfRoll = 0;
 long sThrot = 0;
+
+char send[8];
 
 serLCD lcd;
 
@@ -77,10 +82,16 @@ void loop()
   rfYaw = convertRange(yaw, yawMin, yawMax, 0, 255);
   rfPitch = convertRange(pitch, pitchMin, pitchMax, 0, 255);
   rfRoll = convertRange(roll, rollMin, rollMax, 0, 255);
-  rfWrite(lowByte(rfThrot)); // TODO guard against out of range (0-255)
-  rfWrite(lowByte(rfYaw)); // TODO guard against out of range (0-255)
-  rfWrite(lowByte(rfPitch)); // TODO guard against out of range (0-255)
-  rfWrite(lowByte(rfRoll)); // TODO guard against out of range (0-255)
+  
+  send[0] = null; //header
+  send[1] = lowByte(rfThrot);
+  send[2] = ' ';
+  send[3] = lowByte(rfYaw);
+  send[4] = ' ';
+  send[5] = lowByte(rfPitch);
+  send[6] = ' ';
+  send[7] = lowByte(rfRoll);
+  rfPrint(send); // TODO guard against out of range (0-255)
 
 }
 

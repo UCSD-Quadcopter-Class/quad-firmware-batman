@@ -1,6 +1,10 @@
 #include "radio.h"
 
-int motorPin = 8; // B5
+const int MOTOR1 = 8; // B5
+const int MOTOR2 = 3; // E3
+const int MOTOR3 = 4; // E4
+const int MOTOR4 = 5; // E5
+
 int thr = 0;
 int yaw = 0;
 int pitch = 0;
@@ -12,7 +16,14 @@ void setup()
 {
   Serial.begin(9600);
   rfBegin(19);
-  pinMode(motorPin, OUTPUT);
+  pinMode(MOTOR1, OUTPUT);
+  pinMode(MOTOR2, OUTPUT);
+  pinMode(MOTOR3, OUTPUT);
+  pinMode(MOTOR4, OUTPUT);
+  analogWrite(MOTOR1, 0);
+  analogWrite(MOTOR2, 0);
+  analogWrite(MOTOR3, 0);
+  analogWrite(MOTOR4, 0);
 }
 
 void loop()
@@ -30,7 +41,7 @@ void loop()
     }
   }*/
 
-  if (rfAvailable()) {
+  /*if (rfAvailable()) {
     //unsigned char tmp = rfRead();
     //Serial.println((unsigned char)tmp);
     switch (unsigned char tmp = rfRead()) {
@@ -75,11 +86,14 @@ void loop()
         Serial.println(tmp);
         delay(1);
     }
-  }
+  }*/
 
   //Serial.print("Throttle: ");
   //Serial.println(throttle);
-  //thr = 127;
-  analogWrite(motorPin, thr);
+  thr = 0;
+  analogWrite(MOTOR1, thr);
+  analogWrite(MOTOR2, thr);
+  analogWrite(MOTOR3, thr);
+  analogWrite(MOTOR4, thr);
 }
 

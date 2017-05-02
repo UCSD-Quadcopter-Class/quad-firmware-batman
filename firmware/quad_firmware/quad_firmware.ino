@@ -33,33 +33,31 @@ void setup()
   analogWrite(MOTOR4, 0);
 }
 
-void loop()
+void getRF()
 {
   if(rfAvailable()) {
     char numRead = rfRead((uint8_t*)&controls, sizeof(Control)); //get values
-    Serial.println(controls.header);
-//    if(controls->header == 0xB3EF) {
-//      thr = controls->thr;
-//      Serial.print(thr);
-//      Serial.print(", ");
-//      yaw = controls->yaw;
-//      Serial.print(yaw);
-//      Serial.print(", ");      
-//      pitch = controls->pitch;
-//      Serial.print(pitch);
-//      Serial.print(", "); 
-//      roll = controls->roll;
-//      Serial.println(roll); 
-//    }
-
+    if(controls.header == 0xB3EF) {
+      thr = controls.thr;
+      Serial.print(thr);
+      Serial.print(", ");
+      yaw = controls.yaw;
+      Serial.print(yaw);
+      Serial.print(", ");      
+      pitch = controls.pitch;
+      Serial.print(pitch);
+      Serial.print(", "); 
+      roll = controls.roll;
+      Serial.println(roll); 
+    }
   }
-
-  /*Serial.print("Throttle: ");
-  //Serial.println(throttle);
-//  analogWrite(MOTOR1, thr);
-//  analogWrite(MOTOR2, thr);
-//  analogWrite(MOTOR3, thr);
-//  analogWrite(MOTOR4, thr);*/
 }
 
-
+void loop()
+{
+  getRF();
+  analogWrite(MOTOR1, thr);
+  analogWrite(MOTOR2, thr);
+  analogWrite(MOTOR3, thr);
+  analogWrite(MOTOR4, thr);
+}

@@ -16,7 +16,6 @@ long pitch = 0;
 long roll = 0;
 
 serLCD lcd;
-byte send[12];
 
 typedef struct {
   int header;
@@ -27,7 +26,6 @@ typedef struct {
 } Control;
 
 Control controls;
-int mask = 0x000000FF;
 
 void setup()
 {
@@ -43,29 +41,28 @@ long convertRange(long value, long oldMin, long oldMax, long newMin, long newMax
 
 void serialPrint()
 {
-//  Serial.print("Raw:\t");
-//  Serial.print(thr);
-//  Serial.print(" ");
-//  Serial.print(yaw);
-//  Serial.print(" ");
-//  Serial.print(pitch);
-//  Serial.print(" ");
-//  Serial.print(roll);
-//  Serial.print("\tScaled:\t");
-//  Serial.print(convertRange(thr, thrMin, thrMax, 0, 1500));
-//  Serial.print(" ");
-//  Serial.print(convertRange(yaw, yawMin, yawMax, 0, 1500));
-//  Serial.print(" ");
-//  Serial.print(convertRange(pitch, pitchMin, pitchMax, 0, 1500));
-//  Serial.print(" ");
-//  Serial.print(convertRange(roll, rollMin, rollMax, 0, 1500));
-//  Serial.print("\n");
-
+  Serial.print("Raw:\t");
+  Serial.print(thr);
+  Serial.print(" ");
+  Serial.print(yaw);
+  Serial.print(" ");
+  Serial.print(pitch);
+  Serial.print(" ");
+  Serial.print(roll);
+  Serial.print("\t\tScaled:\t");
+  Serial.print(convertRange(thr, thrMin, thrMax, 0, 1500));
+  Serial.print(" ");
+  Serial.print(convertRange(yaw, yawMin, yawMax, 0, 1500));
+  Serial.print(" ");
+  Serial.print(convertRange(pitch, pitchMin, pitchMax, 0, 1500));
+  Serial.print(" ");
+  Serial.print(convertRange(roll, rollMin, rollMax, 0, 1500));
+  Serial.print("\n");
 }
 
 void lcdPrint()
 {
-  lcd.clear();
+  //lcd.clear();
   lcd.selectLine(0);
   lcd.print(convertRange(thr, thrMin, thrMax, 0, 1500));
   lcd.print(" ");
@@ -83,13 +80,13 @@ void loop()
   pitch = analogRead(3);
   roll = analogRead(2);
   serialPrint();
-  //lcdPrint();
+  lcdPrint();
 
   controls.header = 0xB3EF;
-  controls.thr = convertRange(thr, thrMin, thrMax, 0, 1500); // TODO guard against out of range (0-255)
-  controls.yaw = convertRange(yaw, yawMin, yawMax, 0, 1500); // TODO guard against out of range (0-255)
-  controls.pitch = convertRange(pitch, pitchMin, pitchMax, 0, 1500); // TODO guard against out of range (0-255)
-  controls.roll = convertRange(roll, rollMin, rollMax, 0, 1500); // TODO guard against out of range (0-255)
+  controls.thr = convertRange(thr, thrMin, thrMax, 0, 1500);
+  controls.yaw = convertRange(yaw, yawMin, yawMax, 0, 1500);
+  controls.pitch = convertRange(pitch, pitchMin, pitchMax, 0, 1500);
+  controls.roll = convertRange(roll, rollMin, rollMax, 0, 1500);
 
   rfWrite((uint8_t*)&controls, sizeof(Control));
 }

@@ -14,11 +14,19 @@ long thr = 0;
 long yaw = 0;
 long pitch = 0;
 long roll = 0;
-long rfThrot = 0;
-long sThrot = 0;
 
 serLCD lcd;
 byte send[12];
+
+typedef struct {
+  int header;
+  int thr;
+  int yaw;
+  int pitch;
+  int roll;
+} Control;
+
+Control controls;
 int mask = 0x000000FF;
 
 void setup()
@@ -68,27 +76,6 @@ void lcdPrint()
   lcd.print(convertRange(roll, rollMin, rollMax, 0, 1500));
 }
 
-/*void sendRF()
-{
-  int thr_i = convertRange(thr, thrMin, thrMax, 0, 1500); // TODO guard against out of range (0-255)
-  int yaw_i = convertRange(yaw, yawMin, yawMax, 0, 1500); // TODO guard against out of range (0-255)
-  int pit_i = convertRange(pitch, pitchMin, pitchMax, 0, 1500); // TODO guard against out of range (0-255)
-  int rol_i = convertRange(roll, rollMin, rollMax, 0, 1500); // TODO guard against out of range (0-255)
-  send[0] = '/';
-  send[1] = '*';
-  send[2] = '%';
-  send[3] = '~';
-  send[4] = lowByte(thr_i >> 8) & mask;
-  send[5] = lowByte(thr_i & mask);
-  send[6] = lowByte(yaw_i >> 8) & mask;
-  send[7] = lowByte(yaw_i & mask);
-  send[8] = lowByte(pit_i >> 8) & mask;
-  send[9] = lowByte(pit_i & mask);
-  send[10] = lowByte(rol_i >> 8) & mask;
-  send[11] = lowByte(rol_i & mask);
-  rfPrint(send);
-}*/
-
 void loop()
 {
   thr = analogRead(1);
@@ -98,24 +85,13 @@ void loop()
   serialPrint();
   //lcdPrint();
 
-  int thr_i = convertRange(thr, thrMin, thrMax, 0, 1500); // TODO guard against out of range (0-255)
-  int yaw_i = convertRange(yaw, yawMin, yawMax, 0, 1500); // TODO guard against out of range (0-255)
-  int pit_i = convertRange(pitch, pitchMin, pitchMax, 0, 1500); // TODO guard against out of range (0-255)
-  int rol_i = convertRange(roll, rollMin, rollMax, 0, 1500); // TODO guard against out of range (0-255)
-  
-  send[0] = '/';
-  send[1] = '*';
-  send[2] = '%';
-  send[3] = '~';
-  send[4] = lowByte(thr_i >> 8) & mask;
-  send[5] = lowByte(thr_i & mask);
-  send[6] = lowByte(yaw_i >> 8) & mask;
-  send[7] = lowByte(yaw_i & mask);
-  send[8] = lowByte(pit_i >> 8) & mask;
-  send[9] = lowByte(pit_i & mask);
-  send[10] = lowByte(rol_i >> 8) & mask;
-  send[11] = lowByte(rol_i & mask);
-  rfPrint(send);
+  controls.header = 0xB3EF;
+  controls.thr = convertRange(thr, thrMin, thrMax, 0, 1500); // TODO guard against out of range (0-255)
+  controls.yaw = convertRange(yaw, yawMin, yawMax, 0, 1500); // TODO guard against out of range (0-255)
+  controls.pitch = convertRange(pitch, pitchMin, pitchMax, 0, 1500); // TODO guard against out of range (0-255)
+  controls.roll = convertRange(roll, rollMin, rollMax, 0, 1500); // TODO guard against out of range (0-255)
+
+  rfWrite((uint8_t*)&controls, sizeof(Control));
 }
 
 

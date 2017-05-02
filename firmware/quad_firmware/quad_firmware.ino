@@ -10,7 +10,14 @@ int yaw = 0;
 int pitch = 0;
 int roll = 0;
 
-//struct ???
+typedef struct {
+  int header;
+  int thr;
+  int yaw;
+  int pitch;
+  int roll;
+} Control;
+Control controls;
 
 void setup()
 {
@@ -29,93 +36,23 @@ void setup()
 void loop()
 {
   if(rfAvailable()) {
-    char header[4];
-    char values[12];
-    char numRead = rfRead(values, 12); //get values
-    if(strncmp(values, "/*%~", 4) == 0) {
-
-      Serial.print("THROT VALUE: ");
-      thr = (values[4] << 8) | values[5];
-      Serial.print((int)values[4]);
-      Serial.print(", ");
-      Serial.println((int)values[5]);
-      yaw = (values[6] << 8) | values[7];
-      pitch = (values[8] << 8) | values[9];
-      roll = (values[10] << 8) | values[11];
-
-      Serial.print("THROTTLE: ");
-      Serial.print(thr);
-      Serial.print(", YAW: ");
-      Serial.print(yaw);
-      Serial.print(", PITCH: ");
-      Serial.print(pitch);
-      Serial.print(", ROLL: ");
-      Serial.println(roll);
-    }
+    char numRead = rfRead((uint8_t*)&controls, sizeof(Control)); //get values
+    Serial.println(controls.header);
+//    if(controls->header == 0xB3EF) {
+//      thr = controls->thr;
+//      Serial.print(thr);
+//      Serial.print(", ");
+//      yaw = controls->yaw;
+//      Serial.print(yaw);
+//      Serial.print(", ");      
+//      pitch = controls->pitch;
+//      Serial.print(pitch);
+//      Serial.print(", "); 
+//      roll = controls->roll;
+//      Serial.println(roll); 
+//    }
 
   }
-
-  
-
-  /*if (rfAvailable())
-  {
-    unsigned char tmp = rfRead();
-    Serial.println(int (tmp)); // issue: reads a byte...
-    if(tmp >= 0 && tmp <= 255) { // make sure received value is in range
-      thr = tmp;
-    } else {
-      Serial.print("Not in range: ");
-      Serial.println(tmp);
-      thr = 0;
-    }
-  }*/
-
-  /*if (rfAvailable()) {
-    //unsigned char tmp = rfRead();
-    //Serial.println((unsigned char)tmp);
-    switch (unsigned char tmp = rfRead()) {
-      case 252:
-        Serial.print("Received 252, immediately available value: ");
-        if (rfAvailable()) {
-          tmp = rfRead();
-          Serial.print(tmp);
-          thr = tmp;
-        }
-        Serial.print("\n");
-        break;
-      case 253:
-        Serial.print("Received 253, immediately available value:");
-        if (rfAvailable()) {
-          tmp = rfRead();
-          Serial.print(tmp);
-          yaw = tmp;
-        }
-        Serial.print("\n");
-        break;
-      case 254:
-        Serial.print("Received 254, immediately available value:");
-        if (rfAvailable()) {
-          tmp = rfRead();
-          Serial.print(tmp);
-          pitch = tmp;
-        }
-        Serial.print("\n");
-        break;
-      case 255:
-        Serial.print("Received 255, immediately available value:");
-        if (rfAvailable()) {
-          tmp = rfRead();
-          Serial.print(tmp);
-          roll = tmp;
-        }
-        Serial.print("\n");
-        break;
-      default:
-        Serial.print("Unknown flag value: ");
-        Serial.println(tmp);
-        delay(1);
-    }
-  }*/
 
   /*Serial.print("Throttle: ");
   //Serial.println(throttle);

@@ -9,8 +9,8 @@ int thr = 0;
 int yaw = 0;
 int pitch = 0;
 int roll = 0;
-int rfThrot = 0;
-int sThrot = 0;
+
+//struct ???
 
 void setup()
 {
@@ -28,6 +28,35 @@ void setup()
 
 void loop()
 {
+  if(rfAvailable()) {
+    char header[4];
+    char values[12];
+    char numRead = rfRead(values, 12); //get values
+    if(strncmp(values, "/*%~", 4) == 0) {
+
+      Serial.print("THROT VALUE: ");
+      thr = (values[4] << 8) | values[5];
+      Serial.print((int)values[4]);
+      Serial.print(", ");
+      Serial.println((int)values[5]);
+      yaw = (values[6] << 8) | values[7];
+      pitch = (values[8] << 8) | values[9];
+      roll = (values[10] << 8) | values[11];
+
+      Serial.print("THROTTLE: ");
+      Serial.print(thr);
+      Serial.print(", YAW: ");
+      Serial.print(yaw);
+      Serial.print(", PITCH: ");
+      Serial.print(pitch);
+      Serial.print(", ROLL: ");
+      Serial.println(roll);
+    }
+
+  }
+
+  
+
   /*if (rfAvailable())
   {
     unsigned char tmp = rfRead();
@@ -88,12 +117,12 @@ void loop()
     }
   }*/
 
-  //Serial.print("Throttle: ");
+  /*Serial.print("Throttle: ");
   //Serial.println(throttle);
-  thr = 0;
-  analogWrite(MOTOR1, thr);
-  analogWrite(MOTOR2, thr);
-  analogWrite(MOTOR3, thr);
-  analogWrite(MOTOR4, thr);
+//  analogWrite(MOTOR1, thr);
+//  analogWrite(MOTOR2, thr);
+//  analogWrite(MOTOR3, thr);
+//  analogWrite(MOTOR4, thr);*/
 }
+
 

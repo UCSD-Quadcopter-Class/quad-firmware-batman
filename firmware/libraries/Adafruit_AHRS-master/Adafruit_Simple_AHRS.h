@@ -8,14 +8,16 @@
 class Adafruit_Simple_AHRS
 {
 public:
-  Adafruit_Simple_AHRS(); //Alexorr
+  Adafruit_Simple_AHRS(Adafruit_Sensor* accelerometer, Adafruit_Sensor* magnetometer, Adafruit_Sensor* gyroscope); //Batman
   Adafruit_Simple_AHRS(Adafruit_Sensor* accelerometer, Adafruit_Sensor* magnetometer);
   Adafruit_Simple_AHRS(Adafruit_Sensor_Set& sensors);
   bool getOrientation(sensors_vec_t* orientation);
+  bool getQuad(sensors_vec_t* orientation); //Batman
 
 private:
   Adafruit_Sensor* _accel;
   Adafruit_Sensor* _mag;
+  Adafruit_Sensor* _gyro;
 
 };
 

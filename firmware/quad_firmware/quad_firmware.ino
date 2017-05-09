@@ -18,6 +18,11 @@ float m2;
 float m3;
 float m4;
 float correction[4]; //the correction value for each motor
+const float BOOST = 250.0;
+
+//time variables
+float t_prev = 0.0;
+float t_curr = 0.0;
 
 //orientation object
 sensors_vec_t orientation;
@@ -39,6 +44,8 @@ float propP = 0.0;
 float integP = 0.0;
 float derivP = 0.0;
 float pitchPID = 0.0;
+float pitch = 0.0;
+float pitch_prev = 0.0;
 
 float r_thr = 0.0;
 float r_yaw = 0.0;
@@ -92,8 +99,6 @@ void getRF()
       r_yaw = controls.yaw;     
       r_pitch = controls.pitch;
       r_roll = controls.roll;
-      Serial.print("THR: ");
-      Serial.println(r_thr);
     }
   }
 }
@@ -108,18 +113,27 @@ void calcYaw(float yaw, float rate){
   yawPID = 0 * propY + 0 * integY + 2 * derivY;
 }
 
-void calcPitch(float pitch, float rate){
+void calcPitch(float acc, float gyro){
+  float lambda = 0.7;
+
+  t_curr = millis();  
+  pitch = (lambda) * (pitch_prev + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc);
   float err = pitch - targetPitch;
-  if(err > 10 + targetPitch || err < -10 + targetPitch) {
+  
+  if(err > 1 + targetPitch || err < -1 + targetPitch) {
     propP = err;
     integP = (integP * 0.5) + err;
-    derivP = rate;
-    oldPitch = pitch;  
+    derivP = (pitch - pitch_prev)/(t_curr - t_prev) - 60;
 
-    pitchPID = 2 * propP + 2 * integP + 1 * derivP;
+    pitchPID = 0.1 * propP + 0.1 * integP + 0.1 * derivP;
   }
 
-  else pitchPID = 0;
+  else {
+    pitchPID = 0;
+  }
+  
+  t_prev = t_curr;
+  pitch_prev = pitch;
 }
 
 
@@ -142,31 +156,57 @@ void PID(){
 //      correction[3]
 //    }
 
-      correction[0] = pitchPID;
-      correction[1] = pitchPID;
-      correction[2] = -pitchPID;
-      correction[3] = -pitchPID;
+      correction[0] = -pitchPID;
+      correction[1] = -pitchPID;
+      correction[2] = pitchPID;
+      correction[3] = pitchPID;
   }
 }
 
 void mixer() {
-  m1 = 400 + correction[0];
-  m2 = 400 + correction[1];
-  m3 = 400 + correction[2];
-  m4 = 400 + correction[3];
+  float v1 = correction[0] + r_thr/4;
+  float v2 = correction[1] + r_thr/4;
+  float v3 = correction[2] + r_thr/4 - BOOST;
+  float v4 = correction[3] + r_thr/4 - BOOST;
+  
+  if(v1 >= 0 && v1 < 255.0)
+    m1 = v1;
+  else if(v1 > 255.0)
+    m1 = 255.0;
+  else
+    m1 = 0.0;
+  
+  if(v2 >= 0 && v2 < 255.0)
+    m2 = v2;
+  else if(v2 > 255.0)
+    m2 = 255.0;
+  else
+    m2 = 0.0;
+    
+  if(v3 >= 0 && v3 < 255.0)
+    m3 = v3;
+  else if(v3 > 255.0)
+    m3 = 255.0;
+  else
+    m3 = 0.0;
+  
+  if(v4 >= 0 && v4 < 255.0)
+    m4 = v4;
+  else if(v4 > 255.0)
+    m4 = 255.0;
+  else
+    m4 = 0.0;
 }
 
 void debug(){
-
-
-  Serial.print("MOTOR1: ");
   Serial.print(m1);
-  Serial.print(", MOTOR2: ");
+  Serial.print(", ");
   Serial.print(m2);
-  Serial.print(", MOTOR3: ");
+  Serial.print(", ");
   Serial.print(m3);
-  Serial.print(", MOTOR4: ");
+  Serial.print(", ");
   Serial.println(m4);
+
 }
 
 void loop()

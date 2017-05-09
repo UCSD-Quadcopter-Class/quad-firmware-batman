@@ -104,7 +104,9 @@ bool Adafruit_LSM9DS1::begin()
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG8, 0x05);
   // soft reset & reboot magnetometer
   write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG2_M, 0x0C);
-
+  // apply accel filter 
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0xE0);
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, 0x45);
   delay(10);
 
 

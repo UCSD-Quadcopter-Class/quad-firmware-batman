@@ -1,0 +1,1 @@
+To reduce noise we incorporated a high pass filter on the gyroscope, a low pass filter on the accelerometer, and used a complementary filter to clean up the signal.  It seems to do a pretty good job a reducing the noise.  

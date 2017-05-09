@@ -18,7 +18,7 @@ float m2;
 float m3;
 float m4;
 float correction[4]; //the correction value for each motor
-const float BOOST = 250.0;
+const float BOOST = 1;
 
 //time variables
 float t_prev = 0.0;
@@ -114,18 +114,18 @@ void calcYaw(float yaw, float rate){
 }
 
 void calcPitch(float acc, float gyro){
-  float lambda = 0.7;
+  float lambda = 0.8;
 
   t_curr = millis();  
   pitch = (lambda) * (pitch_prev + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc);
   float err = pitch - targetPitch;
   
-  if(err > 1 + targetPitch || err < -1 + targetPitch) {
+  if(err > 2 + targetPitch || err < -2 + targetPitch) {
     propP = err;
     integP = (integP * 0.5) + err;
-    derivP = (pitch - pitch_prev)/(t_curr - t_prev) - 60;
+    derivP = (pitch - pitch_prev)/(t_curr - t_prev);
 
-    pitchPID = 0.1 * propP + 0.1 * integP + 0.1 * derivP;
+    pitchPID = 1 * propP + 0 * integP + 0 * derivP;
   }
 
   else {
@@ -166,8 +166,8 @@ void PID(){
 void mixer() {
   float v1 = correction[0] + r_thr/4;
   float v2 = correction[1] + r_thr/4;
-  float v3 = correction[2] + r_thr/4 - BOOST;
-  float v4 = correction[3] + r_thr/4 - BOOST;
+  float v3 = correction[2] + r_thr/4 * BOOST;
+  float v4 = correction[3] + r_thr/4 * BOOST;
   
   if(v1 >= 0 && v1 < 255.0)
     m1 = v1;

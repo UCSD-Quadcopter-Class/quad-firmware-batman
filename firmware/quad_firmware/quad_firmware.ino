@@ -18,11 +18,13 @@ float m2;
 float m3;
 float m4;
 float correction[4]; //the correction value for each motor
-const float BOOST = 1;
 
 //time variables
 float t_prev = 0.0;
 float t_curr = 0.0;
+
+//filter weight
+float lambda;
 
 //orientation object
 sensors_vec_t orientation;
@@ -51,6 +53,8 @@ float r_thr = 0.0;
 float r_yaw = 0.0;
 float r_pitch = 0.0;
 float r_roll = 0.0;
+float r_pot1 = 0.0;
+float r_pot2 = 0.0;
 
 typedef struct {
   int header;
@@ -58,6 +62,8 @@ typedef struct {
   int yaw;
   int pitch;
   int roll;
+  float pot1;
+  float pot2;
 } Control;
 Control controls;
 
@@ -99,9 +105,13 @@ void getRF()
       r_yaw = controls.yaw;     
       r_pitch = controls.pitch;
       r_roll = controls.roll;
+      r_pot1 = controls.pot1;
+      r_pot2 = controls.pot2;
     }
   }
 }
+
+
 
 void calcYaw(float yaw, float rate){
   float err = yaw - targetYaw;
@@ -114,26 +124,29 @@ void calcYaw(float yaw, float rate){
 }
 
 void calcPitch(float acc, float gyro){
-  float lambda = 0.8;
+  lambda = 0.43;
 
   t_curr = millis();  
-  pitch = (lambda) * (pitch_prev + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc);
+  pitch = (lambda) * (pitch + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc);
   float err = pitch - targetPitch;
   
-  if(err > 2 + targetPitch || err < -2 + targetPitch) {
+  if(err > targetPitch || err < targetPitch) {
     propP = err;
-    integP = (integP * 0.5) + err;
+    integP = (integP * 0.75) + err;
     derivP = (pitch - pitch_prev)/(t_curr - t_prev);
 
-    pitchPID = 1 * propP + 0 * integP + 0 * derivP;
+    if(integP >= 100.0) integP = 100.0;
+    if(integP <= -100.0) integP = -100.0;
+
+    pitchPID = 1.4 * propP + 0 * integP + 0 * derivP;
+    pitch_prev = pitch;
   }
 
   else {
     pitchPID = 0;
   }
-  
+
   t_prev = t_curr;
-  pitch_prev = pitch;
 }
 
 
@@ -166,8 +179,8 @@ void PID(){
 void mixer() {
   float v1 = correction[0] + r_thr/4;
   float v2 = correction[1] + r_thr/4;
-  float v3 = correction[2] + r_thr/4 * BOOST;
-  float v4 = correction[3] + r_thr/4 * BOOST;
+  float v3 = correction[2] + r_thr/4;
+  float v4 = correction[3] + r_thr/4;
   
   if(v1 >= 0 && v1 < 255.0)
     m1 = v1;
@@ -199,13 +212,16 @@ void mixer() {
 }
 
 void debug(){
-  Serial.print(m1);
-  Serial.print(", ");
-  Serial.print(m2);
-  Serial.print(", ");
-  Serial.print(m3);
-  Serial.print(", ");
-  Serial.println(m4);
+  Serial.print(orientation.pitch);
+  Serial.print(" ");
+  Serial.print(orientation.g_y);
+  Serial.print(" ");
+  Serial.print(pitch);
+  Serial.print(" ");
+  Serial.print(derivP);
+  Serial.print(" ");
+  Serial.println(propP);
+
 
 }
 

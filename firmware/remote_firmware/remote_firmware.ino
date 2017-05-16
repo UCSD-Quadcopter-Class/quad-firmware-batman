@@ -14,6 +14,8 @@ long thr = 0;
 long yaw = 0;
 long pitch = 0;
 long roll = 0;
+long pot1 = 0.0;
+long pot2 = 0.0;
 
 serLCD lcd;
 
@@ -23,6 +25,8 @@ typedef struct {
   int yaw;
   int pitch;
   int roll;
+  float pot1;
+  float pot2;
 } Control;
 
 Control controls;
@@ -37,6 +41,14 @@ void setup()
 long convertRange(long value, long oldMin, long oldMax, long newMin, long newMax)
 {
   return ((value - oldMin) * (newMax-newMin)) / (oldMax-oldMin) + newMin;
+}
+
+float potRange(long value, long oldMin, long oldMax, long newMin, long newMax)
+{
+  float result = abs((float)((value - oldMin) * (newMax-newMin)) / (float)((oldMax-oldMin) + newMin));
+  if(result < newMin) return newMin;
+  if(result > newMax) return newMax;
+  return result;
 }
 
 void serialPrint()
@@ -57,7 +69,11 @@ void serialPrint()
   Serial.print(convertRange(pitch, pitchMin, pitchMax, 0, 1500));
   Serial.print(" ");
   Serial.print(convertRange(roll, rollMin, rollMax, 0, 1500));
-  Serial.print("\n");
+  Serial.print(" ");
+  Serial.print(controls.pot1);
+  Serial.print(" ");
+  Serial.println(controls.pot2);
+
 }
 
 void lcdPrint()
@@ -79,10 +95,15 @@ void loop()
   yaw = analogRead(0);
   pitch = analogRead(3);
   roll = analogRead(2);
+  pot1 = analogRead(7);
+  pot2 = analogRead(6);
+  
   serialPrint();
   lcdPrint();
 
   controls.header = 0xB3EF;
+  controls.pot1 = potRange(pot1, 108, 818, 0, 1);
+  controls.pot2 = potRange(pot2, 108, 818, 0, 1);
   controls.thr = convertRange(thr, thrMin, thrMax, 0, 1500);
   controls.yaw = convertRange(yaw, yawMin, yawMax, 0, 1500);
   controls.pitch = convertRange(pitch, pitchMin, pitchMax, 0, 1500);

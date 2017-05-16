@@ -18,6 +18,7 @@ float m2;
 float m3;
 float m4;
 float correction[4]; //the correction value for each motor
+float TRIM = 0.67;
 
 //time variables
 float t_prev = 0.0;
@@ -124,10 +125,10 @@ void calcYaw(float yaw, float rate){
 }
 
 void calcPitch(float acc, float gyro){
-  lambda = 0.43;
+  lambda = 0.75;
 
   t_curr = millis();  
-  pitch = (lambda) * (pitch + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc);
+  pitch = ((lambda) * (pitch + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc)) + 0.1;
   float err = pitch - targetPitch;
   
   if(err > targetPitch || err < targetPitch) {
@@ -138,14 +139,13 @@ void calcPitch(float acc, float gyro){
     if(integP >= 100.0) integP = 100.0;
     if(integP <= -100.0) integP = -100.0;
 
-    pitchPID = 1.4 * propP + 0 * integP + 0 * derivP;
+    pitchPID = 1.766916 * propP + 0 * integP + 0.4166916 * derivP;
     pitch_prev = pitch;
   }
 
   else {
     pitchPID = 0;
   }
-
   t_prev = t_curr;
 }
 
@@ -179,8 +179,8 @@ void PID(){
 void mixer() {
   float v1 = correction[0] + r_thr/4;
   float v2 = correction[1] + r_thr/4;
-  float v3 = correction[2] + r_thr/4;
-  float v4 = correction[3] + r_thr/4;
+  float v3 = (correction[2] + r_thr/4) * TRIM;
+  float v4 = (correction[3] + r_thr/4) * TRIM;
   
   if(v1 >= 0 && v1 < 255.0)
     m1 = v1;
@@ -212,15 +212,9 @@ void mixer() {
 }
 
 void debug(){
-  Serial.print(orientation.pitch);
+  Serial.print(propP);
   Serial.print(" ");
-  Serial.print(orientation.g_y);
-  Serial.print(" ");
-  Serial.print(pitch);
-  Serial.print(" ");
-  Serial.print(derivP);
-  Serial.print(" ");
-  Serial.println(propP);
+  Serial.print('\n');
 
 
 }

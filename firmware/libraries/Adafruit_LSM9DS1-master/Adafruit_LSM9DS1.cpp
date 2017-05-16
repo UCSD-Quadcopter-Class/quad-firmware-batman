@@ -104,9 +104,17 @@ bool Adafruit_LSM9DS1::begin()
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG8, 0x05);
   // soft reset & reboot magnetometer
   write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG2_M, 0x0C);
-  // apply accel filter 
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0xE0);
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, 0x45);
+
+  // gyro filter
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, 0x45);
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, G_ODR_119);
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG2_G, G_HP);
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, G_ODR119_HPF_2HZ);
+
+  // accel filter 
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, A_ODR_119);
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0xE0);
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, A_LPF_ODR_100);
   delay(10);
 
 
@@ -136,7 +144,7 @@ bool Adafruit_LSM9DS1::begin()
 
   // Enable the accelerometer continous
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG5_XL, 0x38); // enable X Y and Z axis
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, 0xC0); // 1 KHz out data rate, BW set by ODR, 408Hz anti-aliasing
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, ODR_1K); // default. 1 KHz out , BW set by ODR, 408Hz anti-aliasing
 
 
   // enable mag continuous

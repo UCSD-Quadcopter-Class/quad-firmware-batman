@@ -102,8 +102,8 @@ void loop()
   lcdPrint();
 
   controls.header = 0xB3EF;
-  controls.pot1 = potRange(pot1, 108, 818, 0, 1);
-  controls.pot2 = potRange(pot2, 108, 818, 0, 1);
+  controls.pot1 = potRange(pot1, 108, 818, 0, 4);
+  controls.pot2 = potRange(pot2, 108, 818, 0, 4);
   controls.thr = convertRange(thr, thrMin, thrMax, 0, 1500);
   controls.yaw = convertRange(yaw, yawMin, yawMax, 0, 1500);
   controls.pitch = convertRange(pitch, pitchMin, pitchMax, 0, 1500);

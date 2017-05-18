@@ -18,6 +18,7 @@ float m2;
 float m3;
 float m4;
 float correction[4]; //the correction value for each motor
+float TRIM = 0.60;
 
 //time variables
 float t_prev = 0.0;
@@ -120,32 +121,31 @@ void calcYaw(float yaw, float rate){
   derivY = rate;
   oldYaw = yaw;
 
-  yawPID = 0 * propY + 0 * integY + 2 * derivY;
+  yawPID = 0 * propY + 0 * integY + 0 * derivY;
 }
 
 void calcPitch(float acc, float gyro){
-  lambda = 0.43;
+  lambda = 0.8;
 
   t_curr = millis();  
-  pitch = (lambda) * (pitch + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc);
+  pitch = ((lambda) * (pitch + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc)) + 0.5;
   float err = pitch - targetPitch;
   
-  if(err > targetPitch || err < targetPitch) {
+//  if(err > targetPitch || err < targetPitch) {
     propP = err;
     integP = (integP * 0.75) + err;
-    derivP = (pitch - pitch_prev)/(t_curr - t_prev);
+    derivP = (pitch - pitch_prev)/((t_curr - t_prev)/100);
 
     if(integP >= 100.0) integP = 100.0;
     if(integP <= -100.0) integP = -100.0;
 
-    pitchPID = 1.4 * propP + 0 * integP + 0 * derivP;
-    pitch_prev = pitch;
-  }
-
-  else {
-    pitchPID = 0;
-  }
-
+    pitchPID = (r_pot1) * propP + (0.0) * integP + (r_pot2) * derivP;
+//  }
+//
+//  else {
+//    pitchPID = 0;
+//  }
+  pitch_prev = pitch;
   t_prev = t_curr;
 }
 
@@ -156,7 +156,7 @@ void PID(){
     calcPitch(orientation.pitch, orientation.g_y); //TODO: might need to convert g_x to degrees in library
 
 //    if(yawPID > 0) {
-//      correction[0] 
+//      correction[0]
 //      correction[1]
 //      correction[2]
 //      correction[3]
@@ -179,8 +179,8 @@ void PID(){
 void mixer() {
   float v1 = correction[0] + r_thr/4;
   float v2 = correction[1] + r_thr/4;
-  float v3 = correction[2] + r_thr/4;
-  float v4 = correction[3] + r_thr/4;
+  float v3 = (correction[2] + r_thr/4) * TRIM;
+  float v4 = (correction[3] + r_thr/4) * TRIM;
   
   if(v1 >= 0 && v1 < 255.0)
     m1 = v1;
@@ -212,17 +212,15 @@ void mixer() {
 }
 
 void debug(){
-  Serial.print(orientation.pitch);
+  Serial.print(propP * r_pot1);
   Serial.print(" ");
-  Serial.print(orientation.g_y);
+  Serial.print(derivP * r_pot2);
   Serial.print(" ");
-  Serial.print(pitch);
+  Serial.print(r_pot1);
   Serial.print(" ");
-  Serial.print(derivP);
+  Serial.print(r_pot2);
   Serial.print(" ");
-  Serial.println(propP);
-
-
+  Serial.print('\n');
 }
 
 void loop()

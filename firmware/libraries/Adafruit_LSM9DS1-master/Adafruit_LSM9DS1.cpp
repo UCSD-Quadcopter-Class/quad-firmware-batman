@@ -147,12 +147,10 @@ bool Adafruit_LSM9DS1::begin()
   //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG6_XL, 0x40); // 50hz out, BW set by ODR, ??Hz AA
   //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG7_XL, 0x12); // sets LPF cutoff to 119/50 ~ 2.38
 
-
   // enable mag continuous
   //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG1_M, 0xFC); // high perf XY, 80 Hz ODR
   write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG3_M, 0x00); // continuous mode
   //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG4_M, 0x0C); // high perf Z mode
-
 
 
   // Set default ranges for the various sensors  

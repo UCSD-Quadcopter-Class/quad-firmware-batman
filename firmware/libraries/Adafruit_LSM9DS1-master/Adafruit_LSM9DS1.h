@@ -53,21 +53,6 @@
 #define MAGTYPE                           (true)
 #define XGTYPE                            (false)
 
-// Registers
-// REGISTER_CTRL_REG1_G
-#define G_ODR_xxx 0xC0 // ODR 962hz, 245 dps, LPF1 cutoff 100hz, LPF2 powered down
-#define G_ODR_119 0x33 // ODR 119hz, 245 dps, LPF1 cutoff 38hz, LPF2 cutoff 31hz
-// REGISTER_CTRL_REG2_G
-#define G_HP 0x03 // go through LPF1, HPF, and LPF2
-// REGISTER_CTRL_REG3_G
-#define G_ODR119_HPF_2HZ 0x12 // HPF 2hz cutoff when ODR set at 119
-// REGISTER_CTRL_REG6_XL
-#define A_ODR_1K 0xC0
-#define A_ODR_119 0x60 // 119hz out, BW set by ODR, 50Hz AA
-#define A_ODR_50 0x40
-// REGISTER_CTRL_REG7_XL
-#define A_LPF_ODR_100 0x12 // sets LPF cutoff to 119/50 ~ 2.38
-
 /* Forward reference required for function pointers below. */
 class Adafruit_LSM9DS1;
 

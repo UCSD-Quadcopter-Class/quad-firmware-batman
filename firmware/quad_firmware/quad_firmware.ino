@@ -7,10 +7,10 @@
 
 #include "radio.h"
 
-const int MOTOR2 = 8; // B5 ORIGINALLY 1
-const int MOTOR3 = 3; // E3 ORIGINALLY 2
-const int MOTOR4 = 4; // E4 ORIGINALLY 3
-const int MOTOR1 = 5; // E5 ORIGINALLY 4
+#define MOTOR1 5 // E5 ORIGINALLY 4
+#define MOTOR2 8 // B5 ORIGINALLY 1
+#define MOTOR3 3 // E3 ORIGINALLY 2
+#define MOTOR4 4 // E4 ORIGINALLY 3
 
 //Ultimate motor values
 float m1;
@@ -18,14 +18,12 @@ float m2;
 float m3;
 float m4;
 float correction[4]; //the correction value for each motor
-float TRIM = 0.60;
+float TRIM = 0.66;
+bool motorsOff = false;
 
 //time variables
 float t_prev = 0.0;
 float t_curr = 0.0;
-
-//filter weight
-float lambda;
 
 //orientation object
 sensors_vec_t orientation;
@@ -50,23 +48,20 @@ float pitchPID = 0.0;
 float pitch = 0.0;
 float pitch_prev = 0.0;
 
-float r_thr = 0.0;
-float r_yaw = 0.0;
-float r_pitch = 0.0;
-float r_roll = 0.0;
-float r_pot1 = 0.0;
-float r_pot2 = 0.0;
-
 typedef struct {
   int header;
-  int thr;
   int yaw;
-  int pitch;
+  int thr;
   int roll;
+  int pitch;
   float pot1;
   float pot2;
+  int but1;
+  int but2;
 } Control;
+
 Control controls;
+Control rf;
 
 Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();
 Adafruit_Simple_AHRS ahrs (&lsm.getAccel(), &lsm.getMag(), &lsm.getGyro());  
@@ -102,17 +97,17 @@ void getRF()
   if(rfAvailable()) {
     char numRead = rfRead((uint8_t*)&controls, sizeof(Control)); //get values
     if(controls.header == 0xB3EF) {
-      r_thr = controls.thr;
-      r_yaw = controls.yaw;     
-      r_pitch = controls.pitch;
-      r_roll = controls.roll;
-      r_pot1 = controls.pot1;
-      r_pot2 = controls.pot2;
+      rf.yaw = controls.yaw;  
+      rf.thr = controls.thr;   
+      rf.roll = controls.roll;
+      rf.pitch = controls.pitch;
+      rf.pot1 = controls.pot1;
+      rf.pot2 = controls.pot2;
+      rf.but1 = controls.but1;
+      rf.but2 = controls.but2;
     }
   }
 }
-
-
 
 void calcYaw(float yaw, float rate){
   float err = yaw - targetYaw;
@@ -125,21 +120,21 @@ void calcYaw(float yaw, float rate){
 }
 
 void calcPitch(float acc, float gyro){
-  lambda = 0.8;
+  float lambda = 0.8;
 
   t_curr = millis();  
-  pitch = ((lambda) * (pitch + ((t_curr - t_prev) / 1000) * gyro) + (1 - lambda) * (acc)) + 0.5;
+  pitch = ((lambda) * (pitch + ((t_curr - t_prev) / 1000) * -gyro) + (1 - lambda) * (acc));
   float err = pitch - targetPitch;
   
 //  if(err > targetPitch || err < targetPitch) {
     propP = err;
-    integP = (integP * 0.75) + err;
-    derivP = (pitch - pitch_prev)/((t_curr - t_prev)/100);
+    integP = (integP * 0.5) + err;
+    derivP = (pitch - pitch_prev)/((t_curr - t_prev)/100); // extremely noisy, need to filter
 
     if(integP >= 100.0) integP = 100.0;
     if(integP <= -100.0) integP = -100.0;
 
-    pitchPID = (r_pot1) * propP + (0.0) * integP + (r_pot2) * derivP;
+    pitchPID = (rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP;
 //  }
 //
 //  else {
@@ -147,6 +142,23 @@ void calcPitch(float acc, float gyro){
 //  }
   pitch_prev = pitch;
   t_prev = t_curr;
+
+  //Serial.print(orientation.pitch);
+  //Serial.print(" ");
+  Serial.print(pitch);
+  Serial.print(" ");
+  //Serial.print(((t_curr - t_prev) / 1000) * -gyro);
+  //Serial.print(" ");
+  //Serial.print((orientation.g_y)/5);
+  //Serial.print(" ");
+  Serial.print((rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP);
+  Serial.print(" ");
+  Serial.print(propP);
+  Serial.print(" ");
+  Serial.print(derivP);
+  Serial.print(" ");
+  Serial.print("\n");
+  
 }
 
 
@@ -177,10 +189,10 @@ void PID(){
 }
 
 void mixer() {
-  float v1 = correction[0] + r_thr/4;
-  float v2 = correction[1] + r_thr/4;
-  float v3 = (correction[2] + r_thr/4) * TRIM;
-  float v4 = (correction[3] + r_thr/4) * TRIM;
+  float v1 = correction[0] + rf.thr/4;
+  float v2 = correction[1] + rf.thr/4;
+  float v3 = (correction[2] + rf.thr/4) * TRIM;
+  float v4 = (correction[3] + rf.thr/4) * TRIM;
   
   if(v1 >= 0 && v1 < 255.0)
     m1 = v1;
@@ -212,13 +224,13 @@ void mixer() {
 }
 
 void debug(){
-  Serial.print(propP * r_pot1);
+  Serial.print(propP * rf.pot1);
   Serial.print(" ");
-  Serial.print(derivP * r_pot2);
+  Serial.print(derivP * rf.pot2);
   Serial.print(" ");
-  Serial.print(r_pot1);
+  Serial.print(rf.pot1);
   Serial.print(" ");
-  Serial.print(r_pot2);
+  Serial.print(rf.pot2);
   Serial.print(" ");
   Serial.print('\n');
 }
@@ -228,9 +240,13 @@ void loop()
   getRF();
   PID();
   mixer();
-  debug();
-  analogWrite(MOTOR1, m1);
-  analogWrite(MOTOR2, m2);
-  analogWrite(MOTOR3, m3);
-  analogWrite(MOTOR4, m4);
+  //debug();
+  if(rf.but1)
+    motorsOff = true;
+  if(rf.but2)
+    motorsOff = false;
+  analogWrite(MOTOR1, (motorsOff ? 0 : m1));
+  analogWrite(MOTOR2, (motorsOff ? 0 : m2));
+  analogWrite(MOTOR3, (motorsOff ? 0 : m3));
+  analogWrite(MOTOR4, (motorsOff ? 0 : m4));
 }

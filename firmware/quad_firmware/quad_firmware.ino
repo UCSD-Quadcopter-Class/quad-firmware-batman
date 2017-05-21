@@ -128,13 +128,13 @@ void calcPitch(float acc, float gyro){
   
 //  if(err > targetPitch || err < targetPitch) {
     propP = err;
-    integP = (integP * 0.5) + err;
+    integP = (integP * 0.75) + err;
     derivP = (pitch - pitch_prev)/((t_curr - t_prev)/100); // extremely noisy, need to filter
 
     if(integP >= 100.0) integP = 100.0;
     if(integP <= -100.0) integP = -100.0;
 
-    pitchPID = (rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP;
+    pitchPID = (0.52) * propP + (rf.pot1) * integP + (rf.pot2) * derivP;
 //  }
 //
 //  else {
@@ -142,23 +142,6 @@ void calcPitch(float acc, float gyro){
 //  }
   pitch_prev = pitch;
   t_prev = t_curr;
-
-  //Serial.print(orientation.pitch);
-  //Serial.print(" ");
-  Serial.print(pitch);
-  Serial.print(" ");
-  //Serial.print(((t_curr - t_prev) / 1000) * -gyro);
-  //Serial.print(" ");
-  //Serial.print((orientation.g_y)/5);
-  //Serial.print(" ");
-  Serial.print((rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP);
-  Serial.print(" ");
-  Serial.print(propP);
-  Serial.print(" ");
-  Serial.print(derivP);
-  Serial.print(" ");
-  Serial.print("\n");
-  
 }
 
 
@@ -189,8 +172,9 @@ void PID(){
 }
 
 void mixer() {
-  float v1 = correction[0] + rf.thr/4;
-  float v2 = correction[1] + rf.thr/4;
+  float TRIM = 0.60;
+  float v1 = (correction[0] + rf.thr/4);
+  float v2 = (correction[1] + rf.thr/4);
   float v3 = (correction[2] + rf.thr/4) * TRIM;
   float v4 = (correction[3] + rf.thr/4) * TRIM;
   
@@ -224,15 +208,31 @@ void mixer() {
 }
 
 void debug(){
-  Serial.print(propP * rf.pot1);
+//  Serial.print(pitch);
+//  Serial.print(" ");
+//  Serial.print(rf.pot1);
+//  Serial.print(" ");
+//  Serial.print(rf.pot2);
+//  Serial.print(" ");
+//  Serial.print('\n');
+
+  //Serial.print(orientation.pitch);
+  //Serial.print(" ");
+//  Serial.print(pitch);
+//  Serial.print(" ");
+  //Serial.print(((t_curr - t_prev) / 1000) * -gyro);
+  //Serial.print(" ");
+  //Serial.print((orientation.g_y)/5);
+  //Serial.print(" ");
+//  Serial.print((rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP);
+//  Serial.print(" ");
+  Serial.print(propP);
   Serial.print(" ");
-  Serial.print(derivP * rf.pot2);
+  Serial.print(derivP);
   Serial.print(" ");
-  Serial.print(rf.pot1);
+  Serial.print(integP);
   Serial.print(" ");
-  Serial.print(rf.pot2);
-  Serial.print(" ");
-  Serial.print('\n');
+  Serial.print("\n");
 }
 
 void loop()
@@ -240,7 +240,7 @@ void loop()
   getRF();
   PID();
   mixer();
-  //debug();
+  debug();
   if(rf.but1)
     motorsOff = true;
   if(rf.but2)

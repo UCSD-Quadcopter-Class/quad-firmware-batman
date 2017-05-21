@@ -96,10 +96,10 @@ void getRF()
   if(rfAvailable()) {
     char numRead = rfRead((uint8_t*)&controls, sizeof(Control)); //get values
     if(controls.header == 0xB3EF) {
-      rf.yaw = controls.yaw;  
+      rf.yaw = controls.yaw * 0.08789;  
       rf.thr = controls.thr;   
-      rf.roll = controls.roll;
-      rf.pitch = controls.pitch;
+      rf.roll = controls.roll * 0.08789;
+      rf.pitch = controls.pitch * 0.08789;
       rf.pot1 = controls.pot1;
       rf.pot2 = controls.pot2;
       rf.but1 = controls.but1;
@@ -120,29 +120,24 @@ void calcYaw(float yaw, float rate){
 
 void calcPitch(float acc, float gyro){
   float lambda = 0.8;
+  targetPitch = rf.pitch;
 
   t_curr = millis();  
   pitch = ((lambda) * (pitch + ((t_curr - t_prev) / 1000) * -gyro) + (1 - lambda) * (acc));
   float err = pitch - targetPitch;
   
-//  if(err > targetPitch || err < targetPitch) {
-    propP = err;
-    integP = (integP * 0.75) + err;
-    derivP = (pitch - pitch_prev)/((t_curr - t_prev)/100); // extremely noisy, need to filter
+  propP = err;
+  integP = (integP * 0.75) + err;
+  derivP = (pitch - pitch_prev)/((t_curr - t_prev)/100); // extremely noisy, need to filter
 
-    if(integP >= 100.0) integP = 100.0;
-    if(integP <= -100.0) integP = -100.0;
+  if(integP >= 100.0) integP = 100.0;
+  if(integP <= -100.0) integP = -100.0;
 
-    pitchPID = (rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP;
-//  }
-//
-//  else {
-//    pitchPID = 0;
-//  }
+  pitchPID = (0.77) * propP + (0.09) * integP + (3.30) * derivP; //Deriv: 2.65
+
   pitch_prev = pitch;
   t_prev = t_curr;
 }
-
 
 void PID(){
   if(ahrs.getQuad(&orientation)) {
@@ -171,7 +166,7 @@ void PID(){
 }
 
 void mixer() {
-  float TRIM = 0.65;
+  float TRIM = 0.575;
   float v1 = (correction[0] + rf.thr/4);
   float v2 = (correction[1] + rf.thr/4);
   float v3 = (correction[2] + rf.thr/4) * TRIM;
@@ -207,30 +202,30 @@ void mixer() {
 }
 
 void debug(){
-//  Serial.print(pitch);
-//  Serial.print(" ");
-//  Serial.print(rf.pot1);
-//  Serial.print(" ");
-//  Serial.print(rf.pot2);
-//  Serial.print(" ");
-//  Serial.print('\n');
+  Serial.print(pitch);
+  Serial.print(" ");
+  Serial.print(rf.pot1);
+  Serial.print(" ");
+  Serial.print(rf.pot2);
+  Serial.print(" ");
+  Serial.print('\n');
 
-  //Serial.print(orientation.pitch);
-  //Serial.print(" ");
+//  Serial.print(orientation.pitch);
+//  Serial.print(" ");
 //  Serial.print(pitch);
 //  Serial.print(" ");
-  //Serial.print(((t_curr - t_prev) / 1000) * -gyro);
-  //Serial.print(" ");
-  //Serial.print((orientation.g_y)/5);
-  //Serial.print(" ");
-//  Serial.print((rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP);
+//  Serial.print(((t_curr - t_prev) / 1000) * -gyro);
 //  Serial.print(" ");
-  Serial.print(propP);
-  Serial.print(" ");
-  Serial.print(derivP);
-  Serial.print(" ");
-  Serial.print(integP);
-  Serial.print(" ");
+//  Serial.print((orientation.g_y)/5);
+//  Serial.print(" ");
+//  Serial.print(propP);
+//  Serial.print(" ");
+//  Serial.print(derivP);
+//  Serial.print(" ");
+//  Serial.print(integP);
+//  Serial.print(" ");
+//  Serial.print("rf.pitch: ");
+//  Serial.print(rf.pitch);
   Serial.print("\n");
 }
 

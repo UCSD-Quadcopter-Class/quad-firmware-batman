@@ -15,8 +15,9 @@
 #define ROLL  2
 #define PITCH 3
 
-const int minR[] = {0, 0, 0, 0};             // yaw, throttle, roll, pitch min range for conversion
-const int maxR[] = {1023, 1500, 1023, 1023}; // yaw, throttle, roll, pitch max range for conversion
+const int zero[] = {525, 0, 486, 548};
+const int minR[] = {-511, 0, -511, -511};             // yaw, throttle, roll, pitch min range for conversion
+const int maxR[] = {512, 1500, 512, 512}; // yaw, throttle, roll, pitch max range for conversion
 
 // values from remote
 struct {
@@ -51,32 +52,33 @@ int* gimbalsRaw[] = {&r.yaw, &r.thr, &r.roll, &r.pitch};
 int* gimbals[] = {&q.yaw, &q.thr, &q.roll, &q.pitch};
 
 void serialPrint()
-{
-  Serial.print("Raw:\t");
-  for (int i = 0; i < 4; i++) {
-    Serial.print(*(gimbalsRaw[i]));
-    Serial.print(" ");
-  }
-  Serial.print(r.pot1);
-  Serial.print(" ");
-  Serial.print(r.pot2);
-  Serial.print(" ");
-  Serial.print(r.but1);
-  Serial.print(" ");
-  Serial.print(r.but2);
-  Serial.print("\t\tScaled:\t");
+{  
+//  Serial.print("Raw:\t");
+//  for (int i = 0; i < 4; i++) {
+//    Serial.print(*(gimbalsRaw[i]));
+//    Serial.print(" ");
+//  }
+//  Serial.print(r.pot1);
+//  Serial.print(" ");
+//  Serial.print(r.pot2);
+//  Serial.print(" ");
+//  Serial.print(r.but1);
+//  Serial.print(" ");
+//  Serial.print(r.but2);
+//  Serial.print("\t\tScaled:\t");
   for (int i = 0; i < 4; i++) {
     Serial.print(*(gimbals[i]));
     Serial.print(" ");
   }
-  Serial.print(" ");
-  Serial.print(q.pot1);
-  Serial.print(" ");
-  Serial.print(q.pot2);
-  Serial.print(" ");
-  Serial.print(q.but1);
-  Serial.print(" ");
-  Serial.println(q.but2);
+  Serial.print('\n');
+//  Serial.print(" ");
+//  Serial.print(q.pot1);
+//  Serial.print(" ");
+//  Serial.print(q.pot2);
+//  Serial.print(" ");
+//  Serial.print(q.but1);
+//  Serial.print(" ");
+//  Serial.println(q.but2);
 }
 
 void lcdPrint()
@@ -155,10 +157,29 @@ void loop()
   lcdPrint();
 
   q.header = 0xB3EF;
-  q.yaw = convertRange(r.yaw, r.Min[YAW], r.Max[YAW], minR[YAW], maxR[YAW]);
   q.thr = convertRange(r.thr, r.Min[THR], r.Max[THR], minR[THR], maxR[THR]);
-  q.roll = convertRange(r.roll, r.Min[ROLL], r.Max[ROLL], minR[ROLL], maxR[ROLL]);
-  q.pitch = convertRange(r.pitch, r.Min[PITCH], r.Max[PITCH], minR[PITCH], maxR[PITCH]);
+    
+  if(r.yaw > zero[YAW]) {
+    q.yaw = convertRange(r.yaw, zero[YAW], r.Max[YAW], 0, maxR[YAW]);
+  }
+  else {
+    q.yaw = -1 * convertRange(r.yaw, zero[YAW],  r.Min[YAW], 0, -minR[YAW]);
+  }
+
+  if(r.roll > zero[ROLL]) {
+    q.roll = convertRange(r.roll, zero[ROLL], r.Max[ROLL], 0, maxR[ROLL]);
+  }
+  else{
+    q.roll = -1 * convertRange(r.roll, zero[ROLL], r.Min[ROLL], 0, -minR[ROLL]);   
+  }
+  
+  if(r.pitch > zero[PITCH]) {
+    q.pitch = convertRange(r.pitch, zero[PITCH], r.Max[PITCH], 0, maxR[PITCH]);
+  }
+  else {
+    q.pitch = -1 * convertRange(r.pitch, zero[PITCH], r.Min[PITCH], 0, -minR[PITCH]);    
+  }
+  
   q.pot1 = potRange(r.pot1, 111, 816, 0, 4);
   q.pot2 = potRange(r.pot2, 111, 816, 0, 4);
   q.but1 = (r.but1 == 0 ? 1 : 0);

@@ -130,13 +130,13 @@ bool Adafruit_LSM9DS1::begin()
     return false;
 
   // enable gyro continuous
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0xC0); // on XYZ
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0xC0); // on XYZ
   // ^ ODR 962hz, 245 dps, LPF1 cutoff 100hz, LPF2 powered down
   // Custom entries below
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0x33); // ODR 119hz, 245 dps, LPF1 cutoff 38hz, LPF2 cutoff 31hz
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG2_G, 0x0F); // go through LPF1, HPF, and LPF2 (DataReg, FIFO, and interrupt generator)
-  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, 0x45); // Alex's filter, HPF 2hz cutoff when ODR set to 962, can't see effect on plotter
-  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, 0x42); // HPF 2hz cutoff when ODR set at 119
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0x33); // ODR 119hz, 245 dps, LPF1 cutoff 38hz, LPF2 cutoff 31hz
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG2_G, 0x0F); // go through LPF1, HPF, and LPF2 (DataReg, FIFO, and interrupt generator)
+  write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, 0x45); // Alex's filter, HPF 2hz cutoff when ODR set to 962, can't see effect on plotter
+  //write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG3_G, 0x42); // HPF 2hz cutoff when ODR set at 119
 
   // Enable the accelerometer continous
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG5_XL, 0x38); // enable X Y and Z axis

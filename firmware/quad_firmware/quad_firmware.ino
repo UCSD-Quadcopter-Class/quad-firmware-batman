@@ -18,7 +18,6 @@ float m2;
 float m3;
 float m4;
 float correction[4]; //the correction value for each motor
-float TRIM = 0.66;
 bool motorsOff = false;
 
 //time variables
@@ -134,7 +133,7 @@ void calcPitch(float acc, float gyro){
     if(integP >= 100.0) integP = 100.0;
     if(integP <= -100.0) integP = -100.0;
 
-    pitchPID = (0.52) * propP + (rf.pot1) * integP + (rf.pot2) * derivP;
+    pitchPID = (rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP;
 //  }
 //
 //  else {
@@ -172,7 +171,7 @@ void PID(){
 }
 
 void mixer() {
-  float TRIM = 0.60;
+  float TRIM = 0.65;
   float v1 = (correction[0] + rf.thr/4);
   float v2 = (correction[1] + rf.thr/4);
   float v3 = (correction[2] + rf.thr/4) * TRIM;

@@ -17,7 +17,9 @@ float m1;
 float m2;
 float m3;
 float m4;
-float correction[4]; //the correction value for each motor
+float pCorrect[4]; //the correction value for each motor
+float rCorrect[4]; //the correction value for each motor
+float yCorrect[4]; //the correction value for each motor
 bool motorsOff = false;
 
 //time variables
@@ -34,14 +36,6 @@ float oldPitch = 0.0;
 float targetPitch = 0.0;
 float oldRoll = 0.0;
 float targetRoll = 0.0;
-
-//fields for yaw PID calc
-float propY = 0.0;
-float integY = 0.0;
-float derivY = 0.0;
-float yawPID = 0.0;
-float yaw = 0.0;
-float yaw_prev = 0.0;
 
 //fields for pitch PID calc
 float propP = 0.0;
@@ -120,14 +114,8 @@ void getRF()
   }
 }
 
-void calcYaw(float yaw, float rate){
-  float err = yaw - targetYaw;
-  propY = err;
-  integY = (integY * 0.5) + err;
-  derivY = rate;
-  oldYaw = yaw;
-
-  yawPID = 0 * propY + 0 * integY + 0 * derivY;
+void calcYaw(){
+  yawPID = 0.04 * rf.yaw;
 }
 
 void calcRoll(float acc, float gyro) {
@@ -135,17 +123,17 @@ void calcRoll(float acc, float gyro) {
   targetRoll = rf.roll;
 
   t_curr = millis();  
-  roll = ((lambda) * (roll + ((t_curr - t_prev) / 1000) * -gyro) + (1 - lambda) * (acc));
+  roll = ((lambda) * (roll + ((t_curr - t_prev) / 1000.0) * -gyro) + (1 - lambda) * (acc));
   float err = roll - targetRoll;
   
   propR = err;
   integR = (integR * 0.75) + err;
-  derivR = (roll - roll_prev)/((t_curr - t_prev)/100); // extremely noisy, need to filter
+  derivR = (roll - roll_prev) * 100.0/(t_curr - t_prev); // extremely noisy, need to filter
 
   if(integR >= 100.0) integR = 100.0;
   if(integR <= -100.0) integR = -100.0;
 
-  rollPID = (0.77) * propR + (0.09) * integR + (3.30) * derivR; //Deriv: 2.65
+  pitchPID = (0.67) * propP + (0.19) * integP + (3.46) * derivP; //Deriv: 2.65
 
   roll_prev = roll;
   t_prev = t_curr;
@@ -154,19 +142,21 @@ void calcRoll(float acc, float gyro) {
 void calcPitch(float acc, float gyro){
   float lambda = 0.8;
   targetPitch = rf.pitch;
+  
 
   t_curr = millis();  
-  pitch = ((lambda) * (pitch + ((t_curr - t_prev) / 1000) * -gyro) + (1 - lambda) * (acc));
+  pitch = ((lambda) * (pitch + ((t_curr - t_prev) / 1000.0) * -gyro) + (1 - lambda) * (acc));
   float err = pitch - targetPitch;
   
   propP = err;
   integP = (integP * 0.75) + err;
-  derivP = (pitch - pitch_prev)/((t_curr - t_prev)/100); // extremely noisy, need to filter
+  derivP = (pitch - pitch_prev) * 100.0/(t_curr - t_prev); // extremely noisy, need to filter
 
   if(integP >= 100.0) integP = 100.0;
   if(integP <= -100.0) integP = -100.0;
 
-  pitchPID = (0.77) * propP + (0.09) * integP + (3.30) * derivP; //Deriv: 2.65
+  pitchPID = (0.67) * propP + (0.19) * integP + (3.46) * derivP; //Deriv: 2.65
+//  pitchPID = (rf.pot1) * propP + (0.0) * integP + (rf.pot2) * derivP; //Deriv: 2.65
 
   pitch_prev = pitch;
   t_prev = t_curr;
@@ -174,37 +164,33 @@ void calcPitch(float acc, float gyro){
 
 void PID(){
   if(ahrs.getQuad(&orientation)) {
-    calcYaw(orientation.heading, orientation.g_z);
+    calcYaw();
     calcPitch(orientation.pitch, orientation.g_y);
     calcRoll(orientation.roll, orientation.g_x);
 
-//    if(yawPID > 0) {
-//      correction[0]
-//      correction[1]
-//      correction[2]
-//      correction[3]
-//    }
-//
-//    else {
-//      correction[0] 
-//      correction[1]
-//      correction[2]
-//      correction[3]
-//    }
+    yCorrect[0] = -yawPID;
+    yCorrect[1] = yawPID;
+    yCorrect[2] = -yawPID;
+    yCorrect[3] = yawPID;
 
-      correction[0] = -pitchPID - rollPID; // might need to change - to + and + to minus for rollPID
-      correction[1] = -pitchPID + rollPID;
-      correction[2] = pitchPID + rollPID;
-      correction[3] = pitchPID - rollPID;
+    rCorrect[0] = -rollPID;
+    rCorrect[1] = rollPID;
+    rCorrect[2] = rollPID;
+    rCorrect[3] = -rollPID;
+
+    pCorrect[0] = -pitchPID; // might need to change - to + and + to minus for rollPID
+    pCorrect[1] = -pitchPID;
+    pCorrect[2] = pitchPID;
+    pCorrect[3] = pitchPID;
   }
 }
 
 void mixer() {
-  float TRIM = 0.575;
-  float v1 = (correction[0] + rf.thr/4);
-  float v2 = (correction[1] + rf.thr/4);
-  float v3 = (correction[2] + rf.thr/4) * TRIM;
-  float v4 = (correction[3] + rf.thr/4) * TRIM;
+  float TRIM = 0.61;
+  float v1 = (pCorrect[0] + rf.thr/4);
+  float v2 = (pCorrect[1] + rf.thr/4);
+  float v3 = (pCorrect[2] + rf.thr/4) * TRIM;
+  float v4 = (pCorrect[3] + rf.thr/4) * TRIM;
   
   if(v1 >= 0 && v1 < 255.0)
     m1 = v1;
@@ -248,10 +234,6 @@ void debug(){
 //  Serial.print(" ");
 //  Serial.print(pitch);
 //  Serial.print(" ");
-//  Serial.print(((t_curr - t_prev) / 1000) * -gyro);
-//  Serial.print(" ");
-//  Serial.print((orientation.g_y)/5);
-//  Serial.print(" ");
 //  Serial.print(propP);
 //  Serial.print(" ");
 //  Serial.print(derivP);
@@ -260,7 +242,7 @@ void debug(){
 //  Serial.print(" ");
 //  Serial.print("rf.pitch: ");
 //  Serial.print(rf.pitch);
-  Serial.print("\n");
+//  Serial.print("\n");
 }
 
 void loop()

@@ -32,12 +32,16 @@ float oldYaw = 0.0;
 float targetYaw = 0.0;
 float oldPitch = 0.0;
 float targetPitch = 0.0;
+float oldRoll = 0.0;
+float targetRoll = 0.0;
 
 //fields for yaw PID calc
 float propY = 0.0;
 float integY = 0.0;
 float derivY = 0.0;
 float yawPID = 0.0;
+float yaw = 0.0;
+float yaw_prev = 0.0;
 
 //fields for pitch PID calc
 float propP = 0.0;
@@ -46,6 +50,14 @@ float derivP = 0.0;
 float pitchPID = 0.0;
 float pitch = 0.0;
 float pitch_prev = 0.0;
+
+//fields for pitch PID calc
+float propR = 0.0;
+float integR = 0.0;
+float derivR = 0.0;
+float rollPID = 0.0;
+float roll = 0.0;
+float roll_prev = 0.0;
 
 typedef struct {
   int header;
@@ -118,6 +130,27 @@ void calcYaw(float yaw, float rate){
   yawPID = 0 * propY + 0 * integY + 0 * derivY;
 }
 
+void calcRoll(float acc, float gyro) {
+  float lambda = 0.8;
+  targetRoll = rf.roll;
+
+  t_curr = millis();  
+  roll = ((lambda) * (roll + ((t_curr - t_prev) / 1000) * -gyro) + (1 - lambda) * (acc));
+  float err = roll - targetRoll;
+  
+  propR = err;
+  integR = (integR * 0.75) + err;
+  derivR = (roll - roll_prev)/((t_curr - t_prev)/100); // extremely noisy, need to filter
+
+  if(integR >= 100.0) integR = 100.0;
+  if(integR <= -100.0) integR = -100.0;
+
+  rollPID = (0.77) * propR + (0.09) * integR + (3.30) * derivR; //Deriv: 2.65
+
+  roll_prev = roll;
+  t_prev = t_curr;
+}
+
 void calcPitch(float acc, float gyro){
   float lambda = 0.8;
   targetPitch = rf.pitch;
@@ -141,8 +174,9 @@ void calcPitch(float acc, float gyro){
 
 void PID(){
   if(ahrs.getQuad(&orientation)) {
-    calcYaw(orientation.heading, orientation.g_z); //TODO: might need to convert g_z to degrees in library
-    calcPitch(orientation.pitch, orientation.g_y); //TODO: might need to convert g_x to degrees in library
+    calcYaw(orientation.heading, orientation.g_z);
+    calcPitch(orientation.pitch, orientation.g_y);
+    calcRoll(orientation.roll, orientation.g_x);
 
 //    if(yawPID > 0) {
 //      correction[0]
@@ -158,10 +192,10 @@ void PID(){
 //      correction[3]
 //    }
 
-      correction[0] = -pitchPID;
-      correction[1] = -pitchPID;
-      correction[2] = pitchPID;
-      correction[3] = pitchPID;
+      correction[0] = -pitchPID - rollPID; // might need to change - to + and + to minus for rollPID
+      correction[1] = -pitchPID + rollPID;
+      correction[2] = pitchPID + rollPID;
+      correction[3] = pitchPID - rollPID;
   }
 }
 

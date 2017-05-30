@@ -186,11 +186,15 @@ void PID(){
 }
 
 void mixer() {
+  float SHELF = 200;
   float TRIM = 0.61;
   float v1 = (pCorrect[0] + rf.thr/4);
   float v2 = (pCorrect[1] + rf.thr/4);
   float v3 = (pCorrect[2] + rf.thr/4) * TRIM;
   float v4 = (pCorrect[3] + rf.thr/4) * TRIM;
+
+  if(v3 > SHELF) v3 = SHELF;
+  if(v4 > SHELF) v4 = SHELF;
   
   if(v1 >= 0 && v1 < 255.0)
     m1 = v1;

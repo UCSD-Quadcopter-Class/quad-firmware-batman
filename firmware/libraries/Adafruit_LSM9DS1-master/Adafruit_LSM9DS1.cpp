@@ -13,7 +13,6 @@
   BSD license, all text above must be included in any redistribution
  ***************************************************************************/
 #include <Adafruit_LSM9DS1.h>
-
 /***************************************************************************
  CONSTRUCTOR
  ***************************************************************************/
@@ -99,14 +98,12 @@ bool Adafruit_LSM9DS1::begin()
     digitalWrite(_clk, HIGH);
   }
 
-
   // soft reset & reboot accel/gyro
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG8, 0x05);
   // soft reset & reboot magnetometer
   write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG2_M, 0x0C);
 
   delay(10);
-
 
   /*
   for (uint8_t i=0; i<0x30; i++) {
@@ -121,14 +118,21 @@ bool Adafruit_LSM9DS1::begin()
 
   uint8_t id = read8(XGTYPE, LSM9DS1_REGISTER_WHO_AM_I_XG);
   //Serial.print ("XG whoami: 0x"); Serial.println(id, HEX);
-  if (id != LSM9DS1_XG_ID)
-    return false;
+  if (id != LSM9DS1_XG_ID){
+	Serial.println(id, BIN);
+	Serial.println(LSM9DS1_XG_ID, BIN);
+	return false;
+  }
+
 
   id = read8(MAGTYPE, LSM9DS1_REGISTER_WHO_AM_I_M);
-  //Serial.print ("MAG whoami: 0x"); Serial.println(id, HEX);
-  if (id != LSM9DS1_MAG_ID)
-    return false;
+  ////Serial.print ("MAG whoami: 0x"); Serial.println(id, HEX);
+  //if (id != LSM9DS1_MAG_ID) {
+  //  return false;
+  //}
 
+  Serial.println("passes!");
+  
   // enable gyro continuous
   write8(XGTYPE, LSM9DS1_REGISTER_CTRL_REG1_G, 0xC0); // on XYZ
   // ^ ODR 962hz, 245 dps, LPF1 cutoff 100hz, LPF2 powered down
@@ -151,8 +155,7 @@ bool Adafruit_LSM9DS1::begin()
   //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG1_M, 0xFC); // high perf XY, 80 Hz ODR
   write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG3_M, 0x00); // continuous mode
   //write8(MAGTYPE, LSM9DS1_REGISTER_CTRL_REG4_M, 0x0C); // high perf Z mode
-
-
+  
   // Set default ranges for the various sensors  
   setupAccel(LSM9DS1_ACCELRANGE_2G);
   setupMag(LSM9DS1_MAGGAIN_4GAUSS);

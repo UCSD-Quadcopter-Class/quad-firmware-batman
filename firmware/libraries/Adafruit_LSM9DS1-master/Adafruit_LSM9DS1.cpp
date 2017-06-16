@@ -130,7 +130,7 @@ bool Adafruit_LSM9DS1::begin()
   //if (id != LSM9DS1_MAG_ID) {
   //  return false;
   //}
-
+  
   Serial.println("passes!");
   
   // enable gyro continuous

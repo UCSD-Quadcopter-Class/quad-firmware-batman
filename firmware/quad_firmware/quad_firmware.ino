@@ -7,10 +7,10 @@
 
 #include "radio.h"
 
-#define MOTOR1 5 // E5 ORIGINALLY 4
-#define MOTOR2 8 // B5 ORIGINALLY 1
-#define MOTOR3 3 // E3 ORIGINALLY 2
-#define MOTOR4 4 // E4 ORIGINALLY 3
+#define MOTOR4 5 // E5 ORIGINALLY 4
+#define MOTOR1 8 // B5 ORIGINALLY 1
+#define MOTOR2 3 // E3 ORIGINALLY 2
+#define MOTOR3 4 // E4 ORIGINALLY 3
 
 //Ultimate motor values
 float m1;
@@ -70,7 +70,7 @@ typedef struct {
 Control controls;
 Control rf;
 
-Adafruit_LSM9DS1 lsm;
+Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();;
 Adafruit_Simple_AHRS ahrs (&lsm.getAccel(), &lsm.getMag(), &lsm.getGyro());
 
 void configureLSM9DS1() {
@@ -92,12 +92,11 @@ void setup()
   analogWrite(MOTOR3, 0);
   analogWrite(MOTOR4, 0);
 
-  //  lsm = Adafruit_LSM9DS1();
-  //  if(!lsm.begin()){
-  //    while(1);
-  //  }
-  //
-  //  configureLSM9DS1();
+    if(!lsm.begin()){
+      while(1);
+    }
+  
+    configureLSM9DS1();
 }
 
 void getRF()
@@ -191,10 +190,14 @@ void PID() {
 void mixer() {
   float SHELF = 200;
   float TRIM = 0.61;
-  float v1 = (pCorrect[0] + rf.thr / 4);
-  float v2 = (pCorrect[1] + rf.thr / 4);
-  float v3 = (pCorrect[2] + rf.thr / 4) * TRIM;
-  float v4 = (pCorrect[3] + rf.thr / 4) * TRIM;
+  float v1 = (pCorrect[0] + rCorrect[0] + rf.thr / 4);
+  float v2 = (pCorrect[1] + rCorrect[1] + rf.thr / 4);
+  float v3 = (pCorrect[2] + rCorrect[2] + rf.thr / 4) * TRIM;
+  float v4 = (pCorrect[3] + rCorrect[3] + rf.thr / 4) * TRIM;
+//  float v1 = rf.thr/4;
+//  float v2 = rf.thr/4;
+//  float v3 = rf.thr/4;
+//  float v4 = rf.thr/4;
 
   if (v3 > SHELF) v3 = SHELF;
   if (v4 > SHELF) v4 = SHELF;
@@ -237,8 +240,8 @@ void debug() {
   //  Serial.print(" ");
   //  Serial.print('\n');
 
-  //  Serial.println(orientation.pitch);
-  //  Serial.println(orientation.roll);
+    Serial.println(orientation.pitch);
+//    Serial.println(orientation.roll);
 
   //  Serial.println(orientation.pitch);
   //  Serial.print(" ");
@@ -257,21 +260,18 @@ void debug() {
 
 void loop()
 {
-  Serial.println("this should print like so");
-
   getRF();
-  //  PID();
-  //  mixer();
+  PID();
+  mixer();
   debug();
   if (rf.but1)
     motorsOff = true;
   if (rf.but2)
     motorsOff = false;
-  motorsOff = false;
-  analogWrite(MOTOR1, (motorsOff ? 0 : 50));
-  analogWrite(MOTOR2, (motorsOff ? 0 : 50));
-  analogWrite(MOTOR3, (motorsOff ? 0 : 50));
-  analogWrite(MOTOR4, (motorsOff ? 0 : 50));
+  analogWrite(MOTOR1, (motorsOff ? 0 : m1));
+  analogWrite(MOTOR2, (motorsOff ? 0 : m2));
+  analogWrite(MOTOR3, (motorsOff ? 0 : m3));
+  analogWrite(MOTOR4, (motorsOff ? 0 : m4));
 }
 
 
